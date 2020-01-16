@@ -4,7 +4,7 @@ import pytz
 import datetime
 from random import randint
 from flask import jsonify
-from flask_restful import Resource
+from flask_restful import Resource, request, reqparse
 from src.models import WeatherData
 
 class WeatherDataResource(Resource):
@@ -32,7 +32,7 @@ class WeatherDataResource(Resource):
     """
     def post(self):
         try:
-            create_date = datetime.datetime.now(pytz.timezone("America/New_York"))
+            create_date = datetime.datetime.now(pytz.timezone("Europe/Bratislava")).replace(microsecond=0)
             _data = WeatherData(
                 created=create_date,
                 temperature=str(randint(0, 30))
@@ -48,3 +48,27 @@ class WeatherDataResource(Resource):
             )}, 400
 
     
+class DataBetweenDates(Resource):
+    """
+    Get Data between specific dates.
+    """
+    def post(self):
+        try:
+            args = request.args
+            print(args)
+            _data = WeatherData.get_data_between_specific_dates(
+                start=args['start'].replace('T', ' '), 
+                end=args['end'].replace('T', ' ')
+            )
+            return [
+                    {
+                        "created": str(i.created),
+                        "temperature": i.temperature,
+                    } 
+                    for i in _data
+                ], 200
+        except Exception as e:
+            return{"msg": "Could not get data between specified date range. {error}".format(
+                error=e
+            )}, 500
+
