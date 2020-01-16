@@ -6,10 +6,12 @@ Collecting weather data from Raspberry Pi sensors
 python -m venv venv3-weather
 echo "venv3-weather" > .gitignore
 source venv3-weather/bin/activate
+pip install -r requirements.txt
 ```
 
 # Start your app
 ```bash
+source venv3-weather/bin/activate
 export FLASK_APP=runner
 flask run
 ```
