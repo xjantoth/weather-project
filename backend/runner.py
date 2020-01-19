@@ -4,6 +4,7 @@ Main Flask file calling all API endpoints
 
 import sqlite3
 from config import conf
+from flask_cors import CORS
 from flask import (Flask, jsonify)
 from flask_restful import Api
 from src.models import WeatherData
@@ -13,6 +14,8 @@ from src.resources import (
 )
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{db_path}'.format(
     db_path=conf['sqlite_file'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
