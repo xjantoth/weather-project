@@ -13,8 +13,10 @@ class WeatherData(db.Model):
         default=datetime.datetime.now(pytz.timezone("Europe/Bratislava")).replace(microsecond=0)
         )
     temperature = db.Column(db.String())
+    humidity = db.Column(db.String())
 
-    def __init__(self, temperature, created):
+    def __init__(self, humidity, temperature, created):
+        self.humidity = humidity
         self.temperature = temperature
         self.created = created
 
@@ -22,6 +24,7 @@ class WeatherData(db.Model):
         return {
             "created": self.created,
             "temperature": self.temperature,
+            "humidity": self.humidity,
             }
 
     def delete_from_db(self):

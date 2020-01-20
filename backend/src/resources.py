@@ -18,8 +18,10 @@ class WeatherDataResource(Resource):
             if _data:
                 return [
                     {
+                        "id": i.id,
                         "created": str(i.created),
                         "temperature": i.temperature,
+                        "humidity": i.humidity,
                     } 
                     for i in _data
                 ], 200
@@ -35,7 +37,8 @@ class WeatherDataResource(Resource):
             create_date = datetime.datetime.now(pytz.timezone("Europe/Bratislava")).replace(microsecond=0)
             _data = WeatherData(
                 created=create_date,
-                temperature=str(randint(0, 30))
+                temperature=str(randint(0, 30)),
+                humidity=str(randint(0, 40)),
                 )
             _data.save_to_db()
 
@@ -64,6 +67,7 @@ class DataBetweenDates(Resource):
                     {
                         "created": str(i.created),
                         "temperature": i.temperature,
+                        "humidity": i.humidity,
                     } 
                     for i in _data
                 ], 200
