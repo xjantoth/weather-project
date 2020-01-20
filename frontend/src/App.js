@@ -28,7 +28,7 @@ export class App extends Component {
   }
 
   fetchData = () => {
-    axios.get('http://python-flash.local:5000/api/v1/data').then(
+    axios.get('http://backend/api/v1/data').then(
     res => this.setState(
       {data: res.data}
     )

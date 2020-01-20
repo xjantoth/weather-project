@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  ingress:
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+  # The front-end app in React
+  frontend:
+    image: "jantoth/weather-frontend:v0.0.1"
+    depends_on:
+      - backend
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    ports:
+     - "3000:80"
+    container_name: weather-frontend
+    links:
+     - backend 
+    environment:
+     - VIRTUAL_HOST=frontend
+    # docker run -it --rm --name  ft-react -p 3000:80 -d frontend:v0.0.1
+
+  # Python Flask backend app
+  backend:
+    image: "jantoth/weather-backend:v0.0.1"
+    # depends_on:
+    #   - database
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile    
+    ports:
+      - "8000:8000"
+    container_name: weather-backend
+    environment:
+     - VIRTUAL_HOST=backend
+    
+# https://dev.to/englishcraig/creating-an-app-with-docker-compose-django-and-create-react-app-31lf
