@@ -2,6 +2,8 @@ venv3-weather
 .vscode
 **/__pycache__# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+backend/__pycache__/
+backend/src/__pycache__
 # dependencies
 backend/node_modules
 backend/.pnp
