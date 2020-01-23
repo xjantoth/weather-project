@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
 import './App.css';
 import axios from 'axios';
+import dateFormat from 'dateformat';
 import {
     LineChart,
     CartesianGrid,
@@ -16,22 +17,53 @@ import {
     Area,
     Bar
 } from "recharts";
+
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 // import PropTypes from 'prop-types';
+// https://github.com/Hacker0x01/react-datepicker
 
 
 export class App extends Component {
 
     state = {
-        data: []
+        data: [],
+        startDate: new Date(),
+        endDate: new Date()
 
     }
 
     componentDidMount() {
-        this.fetchData();
+        this.fetchAllData();
     }
 
-    fetchData = () => {
+    onChangeStartDate = date => { 
+        console.log("Start Date caming from datepicker: ", date)
+        this.setState({startDate: date}, () => this.fetchRangeData());
+        // console.log("Start Date after", this.state.startDate)
+    };
+    onChangeEndDate = date => { // console.log("End Date before", this.state.endDate);
+        console.log("End Date caming from datepicker: ", date)
+        this.setState({endDate: date}, () => this.fetchRangeData());
+        // console.log("End Date after", this.state.endDate);
+    };
+    
+    fetchAllData = () => {
         axios.get('http://backend/api/v1/data').then(res => this.setState({data: res.data}))
+    };
+
+
+    fetchRangeData = () => { // console.log(dateFormat(this.state.startDate, "yyyy-MM-dd'T'HH:mm:ss"))
+        console.log(this.state.data);
+        console.log("Start date: ", this.state.startDate);
+        console.log("End date: ", this.state.endDate);
+        axios.post(`http://backend/api/v1/data/select`, null, {
+            params: {
+                start: dateFormat(this.state.startDate, "yyyy-mm-dd'T'HH:MM:ss"),
+                end: dateFormat(this.state.endDate, "yyyy-mm-dd'T'HH:MM:ss")
+            }
+        }).then(res => this.setState({data: res.data}))
 
     };
 
@@ -69,6 +101,34 @@ export class App extends Component {
                         <Line dataKey="humidity" stroke="#82ca9d" type="monotone"/>
                     </LineChart>
                 </ResponsiveContainer>
+
+                <DatePicker 
+                    selected={this.state.startDate}
+                    showTimeSelect
+                    onChange={
+                        event => this.onChangeStartDate(event)
+                    }
+                    
+                    
+                    timeFormat="HH:mm"
+                    timeIntervals={15}
+                    timeCaption="time"
+                    dateFormat="yyyy MMMM d, HH:mm"
+                    
+                    />
+
+
+                <DatePicker 
+                    selected={this.state.endDate}
+                    showTimeSelect
+                    onChange={
+                        event => this.onChangeEndDate(event)
+                    }
+                    timeFormat="HH:mm"
+                    timeIntervals={15}
+                    timeCaption="time"
+                    dateFormat="yyyy MMMM d, HH:mm"
+                    />
             </div>
         )
     }
