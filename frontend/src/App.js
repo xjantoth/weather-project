@@ -30,7 +30,9 @@ export class App extends Component {
     state = {
         data: [],
         startDate: new Date(),
-        endDate: new Date()
+        endDate: new Date(),
+        special: [],
+       
 
     }
 
@@ -38,19 +40,24 @@ export class App extends Component {
         this.fetchAllData();
     }
 
-    onChangeStartDate = date => { 
+    onChangeStartDate = date => {
         console.log("Start Date caming from datepicker: ", date)
-        this.setState({startDate: date}, () => this.fetchRangeData());
+        this.setState({
+            startDate: date
+        }, () => this.fetchRangeData());
         // console.log("Start Date after", this.state.startDate)
     };
     onChangeEndDate = date => { // console.log("End Date before", this.state.endDate);
         console.log("End Date caming from datepicker: ", date)
-        this.setState({endDate: date}, () => this.fetchRangeData());
+        this.setState({
+            endDate: date
+        }, () => this.fetchRangeData());
         // console.log("End Date after", this.state.endDate);
     };
-    
+
     fetchAllData = () => {
-        axios.get('http://backend/api/v1/data').then(res => this.setState({data: res.data}))
+        axios.get('http://127.0.0.1:5000/api/v1/data').then(res => this.setState({data: res.data}))
+        axios.get('http://127.0.0.1:5000/api/v1/data/days').then(res => this.setState({special: res.data}))
     };
 
 
@@ -58,7 +65,7 @@ export class App extends Component {
         console.log(this.state.data);
         console.log("Start date: ", this.state.startDate);
         console.log("End date: ", this.state.endDate);
-        axios.post(`http://backend/api/v1/data/select`, null, {
+        axios.post(`http://127.0.0.1:5000/api/v1/data/select`, null, {
             params: {
                 start: dateFormat(this.state.startDate, "yyyy-mm-dd'T'HH:MM:ss"),
                 end: dateFormat(this.state.endDate, "yyyy-mm-dd'T'HH:MM:ss")
@@ -102,24 +109,24 @@ export class App extends Component {
                     </LineChart>
                 </ResponsiveContainer>
 
-                <DatePicker 
-                    selected={this.state.startDate}
+                <DatePicker selected={
+                        this.state.startDate
+                    }
                     showTimeSelect
                     onChange={
                         event => this.onChangeStartDate(event)
                     }
-                    
-                    
+
+
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     timeCaption="time"
-                    dateFormat="yyyy MMMM d, HH:mm"
-                    
-                    />
+                    dateFormat="yyyy MMMM d, HH:mm"/>
 
 
-                <DatePicker 
-                    selected={this.state.endDate}
+                <DatePicker selected={
+                        this.state.endDate
+                    }
                     showTimeSelect
                     onChange={
                         event => this.onChangeEndDate(event)
@@ -127,8 +134,33 @@ export class App extends Component {
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     timeCaption="time"
-                    dateFormat="yyyy MMMM d, HH:mm"
-                    />
+                    dateFormat="yyyy MMMM d, HH:mm"/>
+                
+                
+                <LineChart width={900}
+                    height={500}>
+                    <CartesianGrid strokeDasharray="3 3"/>
+                    <XAxis dataKey="created" 
+                        allowDuplicatedCategory={false}/>
+                    <YAxis dataKey="temperature" type="number"
+                            domain={
+                                [-40, 40]
+                            } />
+                    <Tooltip/>
+                    <Legend/> {
+                    this.state.special.map(s => (
+                        <Line dataKey="temperature"
+                            data={
+                                s.data
+                            }
+                            name={
+                                s.name
+                            }
+                            key={
+                                s.name
+                            }/>
+                    ))
+                } </LineChart>
             </div>
         )
     }

@@ -76,3 +76,70 @@ class DataBetweenDates(Resource):
                 error=e
             )}, 500
 
+class LastNDays(Resource):
+    """Retrives last n-number of dates and returns 
+    series of data per day
+    """
+    def get(self):
+
+        days = 7
+        get_current_day = datetime.datetime(
+            year=datetime.date.today().year,
+            month=datetime.date.today().month,
+            day=datetime.date.today().day,
+            hour=23,
+            minute=59,
+            second=59
+        )
+        intervals = {}
+        for i in range(1, days + 1):
+            
+            get_current_day = get_current_day
+            
+            intervals[f"day_{i - 1}"] = {
+                    "start": str(get_current_day - datetime.timedelta(days=i)),
+                    "end": str(get_current_day - datetime.timedelta(days=i-1))
+                    }
+        
+        data_series = {}
+        for i in intervals:
+            start = intervals[i]["start"]
+            end = intervals[i]["end"]
+            
+            _data = WeatherData.get_data_between_specific_dates(
+                start=str(start).replace('T', ' '), 
+                end=str(end).replace('T', ' ')
+            )
+            
+            data_series[i] = [
+                {
+                    "created": str(s.created),
+                    "temperature": s.temperature,
+                    "humidity": s.humidity,
+                } 
+                for s in _data
+            ]
+            
+        # rechart_compatible = {}
+        # for i in data_series:
+        #     rechart_compatible[i] = data_series[i]
+        #     rechart_compatible["name"] = i
+        
+        # [{i: i**2, i**4: i} for i in range(2,7)]
+        # [{2: 4, 16: 2}, {3: 9, 81: 3}, {4: 16, 256: 4}, {5: 25, 625: 5}, {6: 36, 1296: 6}]
+
+
+        return [{"name": i, "data": data_series[i]} for i in data_series], 200
+
+        # return data_series
+
+            
+        # return rechart_compatible, 200
+            
+        
+
+
+    
+
+
+

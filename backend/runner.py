@@ -11,6 +11,7 @@ from src.models import WeatherData
 from src.resources import (
     WeatherDataResource,
     DataBetweenDates,
+    LastNDays,
 )
 
 app = Flask(__name__)
@@ -32,6 +33,7 @@ def create_tables():
 api =  Api(app)
 api.add_resource(WeatherDataResource, '/api/v1/data')
 api.add_resource(DataBetweenDates, '/api/v1/data/select')
+api.add_resource(LastNDays, '/api/v1/data/days')
 
 if __name__ == '__main__':
     from src.db import db
