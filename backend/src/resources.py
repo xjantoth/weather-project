@@ -34,7 +34,20 @@ class WeatherDataResource(Resource):
     """
     def post(self):
         try:
+            args = request.args
             create_date = datetime.datetime.now(pytz.timezone("Europe/Bratislava")).replace(microsecond=0)
+            create_date_from_request = args.get('created', None) 
+            # print(f"I see this {args} and it is of type {type(args)}  and {create_date_from_request}")
+            
+            
+            create_date_from_request = datetime.datetime.strptime(
+                create_date_from_request.replace('T', ' '), 
+                '%Y-%m-%d %H:%M:%S'
+                )
+            
+            if create_date_from_request:
+                create_date = create_date_from_request
+
             _data = WeatherData(
                 created=create_date,
                 temperature=str(randint(0, 30)),
@@ -113,7 +126,7 @@ class LastNDays(Resource):
             
             data_series[i] = [
                 {
-                    "created": str(s.created),
+                    "created": str(s.created.time()),
                     "temperature": s.temperature,
                     "humidity": s.humidity,
                 } 
