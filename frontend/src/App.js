@@ -39,6 +39,7 @@ export class App extends Component {
 
     componentDidMount() {
         this.fetchAllData();
+        this.fetchDaysData();
     }
 
     onChangeStartDate = date => {
@@ -57,8 +58,11 @@ export class App extends Component {
     };
 
     fetchAllData = () => {
-        axios.get('http://127.0.0.1:5000/api/v1/data').then(res => this.setState({data: res.data}))
-        axios.get('http://127.0.0.1:5000/api/v1/data/days').then(res => this.setState({special: res.data}))
+        axios.get('http://backend:5000/api/v1/data').then(res => this.setState({data: res.data}))
+    };
+
+    fetchDaysData = () => {
+        axios.get('http://backend:5000/api/v1/data/days').then(res => this.setState({special: res.data}))
     };
 
 
@@ -66,7 +70,7 @@ export class App extends Component {
         console.log(this.state.data);
         console.log("Start date: ", this.state.startDate);
         console.log("End date: ", this.state.endDate);
-        axios.post(`http://127.0.0.1:5000/api/v1/data/select`, null, {
+        axios.post(`http://backend:5000/api/v1/data/select`, null, {
             params: {
                 start: dateFormat(this.state.startDate, "yyyy-mm-dd'T'HH:MM:ss"),
                 end: dateFormat(this.state.endDate, "yyyy-mm-dd'T'HH:MM:ss")
@@ -84,9 +88,10 @@ export class App extends Component {
                 </header>
 
                 <ResponsiveContainer minWidth={400}
-                    minHeight={300}>
+                    minHeight={350}>
                     <LineChart data={
-                            this.state.data
+                            this.state.data                            // sort by time
+                            .sort((a, b) => a.created > b.created ? 1 : -1)
                         }
                         margin={
                             {
@@ -139,7 +144,7 @@ export class App extends Component {
 
 
                 <ResponsiveContainer minWidth={400}
-                    minHeight={300}>
+                    minHeight={350}>
                     <LineChart 
                     margin={
                         {
