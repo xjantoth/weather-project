@@ -17,6 +17,7 @@ import {
     Area,
     Bar
 } from "recharts";
+import moment from 'moment'
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -30,27 +31,38 @@ export class App extends Component {
     state = {
         data: [],
         startDate: new Date(),
-        endDate: new Date()
+        endDate: new Date(),
+        special: []
+
 
     }
 
     componentDidMount() {
         this.fetchAllData();
+        this.fetchDaysData();
     }
 
-    onChangeStartDate = date => { 
+    onChangeStartDate = date => {
         console.log("Start Date caming from datepicker: ", date)
-        this.setState({startDate: date}, () => this.fetchRangeData());
+        this.setState({
+            startDate: date
+        }, () => this.fetchRangeData());
         // console.log("Start Date after", this.state.startDate)
     };
     onChangeEndDate = date => { // console.log("End Date before", this.state.endDate);
         console.log("End Date caming from datepicker: ", date)
-        this.setState({endDate: date}, () => this.fetchRangeData());
+        this.setState({
+            endDate: date
+        }, () => this.fetchRangeData());
         // console.log("End Date after", this.state.endDate);
     };
-    
+
     fetchAllData = () => {
         axios.get('http://backend/api/v1/data').then(res => this.setState({data: res.data}))
+    };
+
+    fetchDaysData = () => {
+        axios.get('http://backend/api/v1/data/days').then(res => this.setState({special: res.data}))
     };
 
 
@@ -76,9 +88,10 @@ export class App extends Component {
                 </header>
 
                 <ResponsiveContainer minWidth={400}
-                    minHeight={300}>
+                    minHeight={350}>
                     <LineChart data={
-                            this.state.data
+                            this.state.data                            // sort by time
+                            .sort((a, b) => a.created > b.created ? 1 : -1)
                         }
                         margin={
                             {
@@ -102,24 +115,24 @@ export class App extends Component {
                     </LineChart>
                 </ResponsiveContainer>
 
-                <DatePicker 
-                    selected={this.state.startDate}
+                <DatePicker selected={
+                        this.state.startDate
+                    }
                     showTimeSelect
                     onChange={
                         event => this.onChangeStartDate(event)
                     }
-                    
-                    
+
+
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     timeCaption="time"
-                    dateFormat="yyyy MMMM d, HH:mm"
-                    
-                    />
+                    dateFormat="yyyy MMMM d, HH:mm"/>
 
 
-                <DatePicker 
-                    selected={this.state.endDate}
+                <DatePicker selected={
+                        this.state.endDate
+                    }
                     showTimeSelect
                     onChange={
                         event => this.onChangeEndDate(event)
@@ -127,8 +140,67 @@ export class App extends Component {
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     timeCaption="time"
-                    dateFormat="yyyy MMMM d, HH:mm"
-                    />
+                    dateFormat="yyyy MMMM d, HH:mm"/>
+
+
+                <ResponsiveContainer minWidth={400}
+                    minHeight={350}>
+                    <LineChart 
+                    margin={
+                        {
+                            top: 5,
+                            right: 30,
+                            left: 20,
+                            bottom: 5
+                        }
+                }
+                    >
+                        <CartesianGrid strokeDasharray="1 1"/>
+                        <XAxis dataKey="created"
+                            // type="time"
+                            allowDuplicatedCategory={false} 
+                            connectNulls={false} 
+                            tickFormatter = {(unixTime) => {
+                                console.log(unixTime)
+                                return moment(unixTime).format('LTS')
+                            }}/>
+                        <YAxis dataKey="temperature" type="number"
+                            domain={
+                                [-40, 40]
+                            }/>
+                        <Tooltip/>
+                        <Legend/> {
+                        this.state.special
+                            // sort by length
+                            .sort((a, b) => a.length > b.length ? 1 : -1)
+                            .map(s => (
+                            <Line dataKey="temperature"
+                                data={
+                                    s.data
+                                        .map(d => ({ ...d, created: +Date.parse(`2020 ${d.created}`)}))
+                                        // sort by time
+                                        .sort((a, b) => a.created > b.created ? 1 : -1)
+                                }
+                                name={
+                                    s.name
+                                }
+                                stroke={
+                                    {
+                                        '0': 'red',
+                                        '1': 'blue',
+                                        '2': 'green',
+                                        '3': 'yellow',
+                                        '4': 'orange',
+                                        '5': 'black',
+                                        '6': 'cyan'
+                                    }[s.name.substring('4')] || 'red'
+                                }
+                                key={
+                                    s.name
+                                }/>
+                        ))
+                    } </LineChart>
+                </ResponsiveContainer>
             </div>
         )
     }
