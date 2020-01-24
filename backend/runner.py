@@ -17,10 +17,11 @@ from src.resources import (
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.WARNING)
-# app.logger.addHandler(stream_handler)
-app.logger.stream_handler
+app.logger.addHandler(stream_handler)
+
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{db_path}'.format(
     db_path=conf['sqlite_file'])

@@ -16,7 +16,7 @@ def save_to_db(n):
     
     for i in dates:
         requests.post(
-            url="http://backend:5000/api/v1/data",
+            url="http://backend/api/v1/data",
             params={
                 "created": str(i).replace(' ', 'T')
             }
