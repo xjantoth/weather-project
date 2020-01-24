@@ -66,4 +66,4 @@ docker-compose up
 
  http://frontend/app
 
-![Screenshot](img/frontend.png)
+![Screenshot](img/front.png)
