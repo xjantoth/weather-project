@@ -3,6 +3,7 @@ Main Flask file calling all API endpoints
 """
 
 import sqlite3
+import logging
 from config import conf
 from flask_cors import CORS
 from flask import (Flask, jsonify)
@@ -16,6 +17,10 @@ from src.resources import (
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.WARNING)
+# app.logger.addHandler(stream_handler)
+app.logger.stream_handler
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{db_path}'.format(
     db_path=conf['sqlite_file'])
