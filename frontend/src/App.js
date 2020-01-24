@@ -58,11 +58,11 @@ export class App extends Component {
     };
 
     fetchAllData = () => {
-        axios.get('http://backend:5000/api/v1/data').then(res => this.setState({data: res.data}))
+        axios.get('http://backend/api/v1/data').then(res => this.setState({data: res.data}))
     };
 
     fetchDaysData = () => {
-        axios.get('http://backend:5000/api/v1/data/days').then(res => this.setState({special: res.data}))
+        axios.get('http://backend/api/v1/data/days').then(res => this.setState({special: res.data}))
     };
 
 
@@ -70,7 +70,7 @@ export class App extends Component {
         console.log(this.state.data);
         console.log("Start date: ", this.state.startDate);
         console.log("End date: ", this.state.endDate);
-        axios.post(`http://backend:5000/api/v1/data/select`, null, {
+        axios.post(`http://backend/api/v1/data/select`, null, {
             params: {
                 start: dateFormat(this.state.startDate, "yyyy-mm-dd'T'HH:MM:ss"),
                 end: dateFormat(this.state.endDate, "yyyy-mm-dd'T'HH:MM:ss")
