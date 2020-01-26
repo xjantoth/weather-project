@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import './App.css';
 import axios from 'axios';
 import {
     LineChart,
@@ -15,6 +14,7 @@ import moment from 'moment'
 import { sortBy } from 'lodash';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import './App.css';
 
 // import PropTypes from 'prop-types';
 // https://github.com/Hacker0x01/react-datepicker
@@ -27,9 +27,9 @@ const styles = {
         bottom: 5
     },
     yAxis: {
-        opacity: 0.7,
-        fontSize: '1.4rem',
-        fontWeight: '400',
+        opacity: 0.9,
+        fontSize: '1.1rem',
+        fontWeight: '600',
     }
 }
 
@@ -149,8 +149,14 @@ export class App extends Component {
                 <ResponsiveContainer
                     minWidth={400}
                     minHeight={350}>
-                    <LineChart margin={styles.chart}>
-                        <CartesianGrid strokeDasharray="1 1" />
+                    <LineChart 
+                        margin={styles.chart}
+                    >
+                        <CartesianGrid
+                            strokeDasharray="0 3 10 3"
+                            strokeOpacity={0.5}
+                            horizontal
+                            vertical />
                         <XAxis
                             dataKey="created"
                             allowDuplicatedCategory={false}
@@ -170,7 +176,11 @@ export class App extends Component {
                                 key={name}
                                 data={data}
                                 name={name}
-                                stroke={this.getColor(name)} />
+                                strokeWidth={2}
+                                // strokeDasharray="16 4"
+                                dot={{ r: 4 }}
+                                activeDot={{ r: 8 }}
+                                stroke={this.getColor()} />
                         ))}
                     </LineChart>
                 </ResponsiveContainer>
