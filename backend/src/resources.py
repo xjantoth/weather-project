@@ -36,22 +36,22 @@ class WeatherDataResource(Resource):
         try:
             args = request.args
             create_date = datetime.datetime.now(pytz.timezone("Europe/Bratislava")).replace(microsecond=0)
+
             create_date_from_request = args.get('created', None) 
             # print(f"I see this {args} and it is of type {type(args)}  and {create_date_from_request}")
             
-            
-            create_date_from_request = datetime.datetime.strptime(
-                create_date_from_request.replace('T', ' '), 
-                '%Y-%m-%d %H:%M:%S'
-                )
-            
             if create_date_from_request:
+                create_date_from_request = datetime.datetime.strptime(
+                    create_date_from_request.replace('T', ' '), 
+                    '%Y-%m-%d %H:%M:%S'
+                )
                 create_date = create_date_from_request
+
 
             _data = WeatherData(
                 created=create_date,
-                temperature=str(randint(0, 30)),
-                humidity=str(randint(0, 40)),
+                temperature= args.get('temperature', str(randint(0, 30))),
+                humidity=args.get('humidity', str(randint(0, 40))),
                 )
             _data.save_to_db()
 
@@ -150,7 +150,21 @@ class LastNDays(Resource):
         # return rechart_compatible, 200
             
         
+class HealthClass(Resource):
+    """
+    This is the API checks backend connectivity to database.
+    """
+    def get(self):
+        """Connects to PostgreSQL database"""
+        try:
+            WeatherData.get_all_available_data()
+            return {
+                "msg": "Dummy database connectivity check.",
+                "message": True,
+            }, 200
 
+        except Exception as e:
+            return {"msg": f"Cloud not load data from database: {e}"}, 500
 
     
 

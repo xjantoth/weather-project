@@ -67,3 +67,154 @@ docker-compose up
  http://frontend/app
 
 ![Screenshot](img/front.png)
+
+
+Build backedn helm chart
+```bash
+sed -E \
+-e 's/^(description:).*/\1 Raspberry Pi Backend helm chart/' \
+-e 's/^(appVersion:).*/\1 0.0.1 /' \
+-e '$a  \\ndependencies: \n- name: postgresql \n  version: "9.8.3" \n  repository: "https://charts.bitnami.com/bitnami" \n' \
+-i backend/Chart.yaml
+
+
+helm repo list
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm dependency update backend
+
+sed -E \ 
+-e 's/^(.*paths:).*/\1 ["\/api"]/' \
+-e '/^ingress.*/,/^\s*tls:.*/s/^(.*-\shost: )(.*)/\1 raspberrypi--weather-monitoring/' \
+-e '/^.*pullPolicy:.*/a \ \ containerPort: 8000' \
+-e '/^.*pullPolicy:.*/a \ \ # Database connection settings:' \
+-e '/^.*pullPolicy:.*/a \ \ env:' \
+-e '/^.*pullPolicy:.*/a \ \ \ \ secret:' \
+-e '/^.*pullPolicy:.*/a \ \ \ \ \ \ PSQL_DB_USER: "micro"' \
+-e '/^.*pullPolicy:.*/a \ \ \ \ \ \ PSQL_DB_PASS: "password"' \
+-e '/^.*pullPolicy:.*/a \ \ \ \ \ \ PSQL_DB_NAME: "microservice"' \
+-e '/^.*pullPolicy:.*/a \ \ \ \ \ \ PSQL_DB_ADDRESS: "backend-postgresql"' \
+-e '/^.*pullPolicy:.*/a \ \ \ \ \ \ PSQL_DB_PORT: "5432"' \
+-e '$a \\nlivenessProbe: \/api\/health' \
+-e '$a \\nreadinessProbe: \/api\/health' \
+-e 's/^(.*repository:).*/\1 jantoth\/weather-backend/' \
+-i backend/values.yaml
+
+
+
+
+cat <<'EOF' >>backend/values.yaml
+
+postgresql:
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql
+    tag: latest
+    debug: true
+
+  global:
+    postgresql:
+      postgresqlUsername: postgres
+      postgresqlPassword: password
+
+  persistence:
+    enabled: false
+
+  pgHbaConfiguration: |
+    local all all trust
+    host all all localhost trust
+    host microservice micro 10.42.0.0/16 password
+
+  initdbScripts:
+    db-init.sql: |
+      CREATE DATABASE microservice;
+      CREATE USER micro WITH ENCRYPTED PASSWORD 'password';
+      GRANT ALL PRIVILEGES ON DATABASE microservice TO micro;
+      ALTER DATABASE microservice OWNER TO micro;
+
+EOF
+
+sed -E \
+-e 's/^(.*targetPort:).*/\1 {{ .Values.image.containerPort | default 80 }}/' \
+-i backend/templates/service.yaml
+
+
+# Setup "livenessProbe" and "readinessProbe" in backend/templates/deployment.yaml
+sed -E \
+-e '/^\s*livenessProbe:.*/,/^\s*port:.*/s/^(.*port:)(.*)/\1 {{ .Values.image.containerPort | default "http" }}/' \
+-e '/^\s*readinessProbe:.*/,/^\s*port:.*/s/^(.*port:)(.*)/\1 {{ .Values.image.containerPort | default "http" }}/' \
+-e '/^\s*livenessProbe:.*/,/^\s*port:.*/s/^(.*path:)(.*)/\1 {{ .Values.livenessProbe | default "\/" }}/' \
+-e '/^\s*readinessProbe:.*/,/^\s*port:.*/s/^(.*path:)(.*)/\1 {{ .Values.readinessProbe | default "\/" }}/' \
+-e 's/^(.*containerPort:).*/\1 {{ .Values.image.containerPort }}/' \
+-e '/^.*image:.*/a \ \ \ \ \ \ \ \ \ \ env:' \
+-e '/^.*image:.*/a \ \ \ \ \ \ \ \ \ \ {{- include "helpers.list-env-variables" . | indent 10 }}' \
+-i backend/templates/deployment.yaml
+
+# Creating file: "backend/templates/secret.yaml"
+cat <<'EOF' >>backend/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database-conection
+type: Opaque
+data:
+  {{- range $key, $val := .Values.image.env.secret }}
+  {{ $key }}: {{ $val | b64enc }}
+  {{- end}}
+      
+EOF   
+
+
+
+cat <<'EOF' >>backend/templates/_helpers.tpl
+
+{{/*
+Create the looper to define secret mounts as ENV variables
+*/}}
+
+{{- define "helpers.list-env-variables"}}
+{{- range $key, $val := .Values.image.env.secret }}
+- name: {{ $key }}
+  valueFrom:
+    secretKeyRef:
+      name: database-conection
+      key: {{ $key }}
+{{- end}}
+{{- end}}
+EOF
+```
+
+
+Create frontend helm chart
+
+```bash
+
+helm create frontend
+
+sed -E \
+-e 's/^(description:).*/\1 Frontend React app helm chart/' \
+-e 's/^(appVersion:).*/\1 0.0.1 /' \
+-i frontend/Chart.yaml
+
+sed -E \
+-e 's/^(.*paths:).*/\1 ["\/app"]/' \
+-e '/^ingress.*/,/^\s*tls:.*/s/^(.*-\shost: )(.*)/\1 raspberrypi--weather-monitoring/' \
+-e '/^.*pullPolicy:.*/a \ \ containerPort: 80' \
+-e '$a \\nlivenessProbe: \/app' \
+-e '$a \\nreadinessProbe: \/app' \
+-e 's/^(.*repository:).*/\1 jantoth\/weather-frontend/' \
+-i frontend/values.yaml
+
+sed -E \
+-e 's/^(.*targetPort:).*/\1 {{ .Values.image.containerPort | default 80 }}/' \
+-i frontend/templates/service.yaml
+
+sed -E \
+-e '/^\s*livenessProbe:.*/,/^\s*port:.*/s/^(.*port:)(.*)/\1 {{ .Values.image.containerPort | default "http" }}/' \
+-e '/^\s*readinessProbe:.*/,/^\s*port:.*/s/^(.*port:)(.*)/\1 {{ .Values.image.containerPort | default "http" }}/' \
+-e '/^\s*livenessProbe:.*/,/^\s*port:.*/s/^(.*path:)(.*)/\1 {{ .Values.livenessProbe | default "\/" }}/' \
+-e '/^\s*readinessProbe:.*/,/^\s*port:.*/s/^(.*path:)(.*)/\1 {{ .Values.readinessProbe | default "\/" }}/' \
+-e 's/^(.*containerPort:).*/\1 {{ .Values.image.containerPort }}/' \
+-i frontend/templates/deployment.yaml
+```
+
+

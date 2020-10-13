@@ -4,7 +4,7 @@ Main Flask file calling all API endpoints
 
 import sqlite3
 import logging
-from config import conf
+from config import POSTGRES
 from flask_cors import CORS
 from flask import (Flask, jsonify)
 from flask_restful import Api
@@ -13,18 +13,21 @@ from src.resources import (
     WeatherDataResource,
     DataBetweenDates,
     LastNDays,
+    HealthClass,
 )
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.WARNING)
+stream_handler.setLevel(logging.DEBUG)
 app.logger.addHandler(stream_handler)
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{db_path}'.format(
-    db_path=conf['sqlite_file'])
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{db_path}'.format(
+#    db_path=conf['sqlite_file'])
+app.config[
+    'SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:%(pw)s@%(host)s:%(port)s/%(db)s' % POSTGRES
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
@@ -40,6 +43,7 @@ api =  Api(app)
 api.add_resource(WeatherDataResource, '/api/v1/data')
 api.add_resource(DataBetweenDates, '/api/v1/data/select')
 api.add_resource(LastNDays, '/api/v1/data/days')
+api.add_resource(HealthClass, '/api/health')
 
 if __name__ == '__main__':
     from src.db import db
